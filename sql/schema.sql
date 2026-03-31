@@ -1,6 +1,22 @@
 CREATE DATABASE IF NOT EXISTS office_assets;
 USE office_assets;
 
+CREATE TABLE IF NOT EXISTS categories (
+  id          VARCHAR(36) PRIMARY KEY,
+  name        VARCHAR(100) NOT NULL UNIQUE,
+  icon        VARCHAR(100) DEFAULT NULL,
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS statuses (
+  id          VARCHAR(36) PRIMARY KEY,
+  name        VARCHAR(100) NOT NULL UNIQUE,
+  color       VARCHAR(50) DEFAULT NULL,
+  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS users (
   id            VARCHAR(36) PRIMARY KEY,
   name          VARCHAR(100) NOT NULL,
@@ -18,8 +34,8 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS assets (
   id              VARCHAR(36) PRIMARY KEY,
   name            VARCHAR(200) NOT NULL,
-  category        ENUM('laptop','monitor','phone','furniture','accessory','other') NOT NULL,
-  status          ENUM('available','assigned','maintenance','retired') NOT NULL DEFAULT 'available',
+  category_id     VARCHAR(36) NOT NULL,
+  status_id       VARCHAR(36) NOT NULL,
   assigned_to     VARCHAR(36),
   serial_number   VARCHAR(100) NOT NULL UNIQUE,
   location        VARCHAR(200) NOT NULL,
@@ -29,5 +45,7 @@ CREATE TABLE IF NOT EXISTS assets (
   notes           TEXT,
   created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL
+  FOREIGN KEY (assigned_to) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT,
+  FOREIGN KEY (status_id) REFERENCES statuses(id) ON DELETE RESTRICT
 );
