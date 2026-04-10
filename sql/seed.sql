@@ -6,7 +6,8 @@ INSERT INTO users (id, name, email, password, department, role, phone, join_date
 ('u1', 'Sarah Johnson', 'sarah.johnson@company.com', '$2a$10$1b31xQqwYW/GnUabA.//zuo5HrHivN4gMctIokksXJcfFY8vs05dK', 'Engineering', 'IT Asset Manager', '+1 (555) 123-4567', '2022-03-15'),
 ('u2', 'Mike Chen', 'mike.chen@company.com', '$2a$10$1b31xQqwYW/GnUabA.//zuo5HrHivN4gMctIokksXJcfFY8vs05dK', 'Engineering', 'Senior Developer', '+1 (555) 234-5678', '2021-07-01'),
 ('u3', 'Alex Rivera', 'alex.rivera@company.com', '$2a$10$1b31xQqwYW/GnUabA.//zuo5HrHivN4gMctIokksXJcfFY8vs05dK', 'Design', 'UX Designer', '+1 (555) 345-6789', '2023-01-10'),
-('u4', 'Emma Wilson', 'emma.wilson@company.com', '$2a$10$1b31xQqwYW/GnUabA.//zuo5HrHivN4gMctIokksXJcfFY8vs05dK', 'Product', 'Product Manager', '+1 (555) 456-7890', '2022-09-20');
+('u4', 'Emma Wilson', 'emma.wilson@company.com', '$2a$10$1b31xQqwYW/GnUabA.//zuo5HrHivN4gMctIokksXJcfFY8vs05dK', 'Product', 'Product Manager', '+1 (555) 456-7890', '2022-09-20'),
+('u5', 'Admin User', 'admin@company.com', '$2a$10$1b31xQqwYW/GnUabA.//zuo5HrHivN4gMctIokksXJcfFY8vs05dK', 'IT', 'admin', '+1 (555) 567-8901', '2021-01-01');
 
 INSERT INTO categories (id, name, icon) VALUES
 ('cat_1', 'Laptop', 'laptop_mac'),

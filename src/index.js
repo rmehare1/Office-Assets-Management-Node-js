@@ -7,6 +7,9 @@ const assetRoutes = require('./routes/assets');
 const userRoutes = require('./routes/users');
 const catRoutes = require('./routes/categories');
 const statRoutes = require('./routes/statuses');
+const locationRoutes = require('./routes/locations');
+const departmentRoutes = require('./routes/departments');
+const ticketRoutes = require('./routes/tickets');
 
 const app = express();
 
@@ -18,6 +21,9 @@ app.use('/api/assets', assetRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/categories', catRoutes);
 app.use('/api/statuses', statRoutes);
+app.use('/api/locations', locationRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/tickets', ticketRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

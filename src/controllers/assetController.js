@@ -3,7 +3,7 @@ const pool = require('../config/database');
 
 exports.getAll = async (req, res) => {
   try {
-    const { status_id, category_id, search, sort, order } = req.query;
+    const { status_id, category_id, search, sort, order, assigned_to } = req.query;
     let sql = `
       SELECT a.*, 
              u.name AS assigned_to_name,
@@ -28,9 +28,13 @@ exports.getAll = async (req, res) => {
       params.push(category_id);
     }
     if (search) {
-      sql += ' AND (a.name LIKE ? OR a.serial_number LIKE ? OR a.location LIKE ?)';
+      sql += ' AND (a.name LIKE ? OR a.serial_number LIKE ? OR a.location_name LIKE ?)';
       const term = `%${search}%`;
       params.push(term, term, term);
+    }
+    if (assigned_to) {
+      sql += ' AND a.assigned_to = ?';
+      params.push(assigned_to);
     }
 
     const allowedSorts = ['name', 'category', 'status', 'purchase_date', 'purchase_price', 'created_at'];
@@ -74,10 +78,10 @@ exports.getById = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { name, category_id, status_id, assigned_to, serial_number, location, purchase_date, purchase_price, image_url, notes } = req.body;
+    const { name, category_id, status_id, assigned_to, serial_number, location_id, location_name, purchase_date, purchase_price, image_url, notes } = req.body;
 
-    if (!name || !category_id || !status_id || !serial_number || !location || !purchase_date || purchase_price == null) {
-      return res.status(400).json({ message: 'Missing required fields: name, category_id, status_id, serial_number, location, purchase_date, purchase_price' });
+    if (!name || !category_id || !status_id || !serial_number || !purchase_date || purchase_price == null) {
+      return res.status(400).json({ message: 'Missing required fields: name, category_id, status_id, serial_number, purchase_date, purchase_price' });
     }
 
     const [existing] = await pool.query('SELECT id FROM assets WHERE serial_number = ?', [serial_number]);
@@ -87,9 +91,9 @@ exports.create = async (req, res) => {
 
     const id = uuidv4();
     await pool.query(
-      `INSERT INTO assets (id, name, category_id, status_id, assigned_to, serial_number, location, purchase_date, purchase_price, image_url, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, name, category_id, status_id, assigned_to || null, serial_number, location, purchase_date, purchase_price, image_url || null, notes || null]
+      `INSERT INTO assets (id, name, category_id, status_id, assigned_to, serial_number, location_id, location_name, purchase_date, purchase_price, image_url, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, name, category_id, status_id, assigned_to || null, serial_number, location_id || null, location_name || '', purchase_date, purchase_price, image_url || null, notes || null]
     );
 
     const [rows] = await pool.query(
@@ -115,7 +119,7 @@ exports.update = async (req, res) => {
       return res.status(404).json({ message: 'Asset not found' });
     }
 
-    const fields = ['name', 'category_id', 'status_id', 'assigned_to', 'serial_number', 'location', 'purchase_date', 'purchase_price', 'image_url', 'notes'];
+    const fields = ['name', 'category_id', 'status_id', 'assigned_to', 'serial_number', 'location_id', 'location_name', 'purchase_date', 'purchase_price', 'image_url', 'notes'];
     const updates = [];
     const params = [];
 
