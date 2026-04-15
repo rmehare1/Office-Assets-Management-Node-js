@@ -47,6 +47,7 @@ exports.getAll = async (req, res) => {
     // Convert property names if strictly needed, though our SELECT returns nice aliases already.
     res.json({ assets: rows });
   } catch (err) {
+    console.error('getAll Error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
@@ -72,13 +73,46 @@ exports.getById = async (req, res) => {
     }
     res.json({ asset: rows[0] });
   } catch (err) {
+    console.error('getById Error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.lookupByCode = async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (!code) {
+      return res.status(400).json({ message: 'Missing required query parameter: code' });
+    }
+
+    const [rows] = await pool.query(
+      `SELECT a.*, 
+              u.name AS assigned_to_name,
+              c.name AS category,
+              c.icon AS category_icon,
+              s.name AS status,
+              s.color AS status_color
+       FROM assets a
+       LEFT JOIN users u ON a.assigned_to = u.id
+       LEFT JOIN categories c ON a.category_id = c.id
+       LEFT JOIN statuses s ON a.status_id = s.id
+       WHERE a.serial_number = ? OR a.barcode_value = ?`,
+      [code, code]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Asset not found' });
+    }
+    res.json({ asset: rows[0] });
+  } catch (err) {
+    console.error('lookupByCode Error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
 
 exports.create = async (req, res) => {
   try {
-    const { name, category_id, status_id, assigned_to, serial_number, location_id, location_name, purchase_date, purchase_price, image_url, notes } = req.body;
+    const { name, category_id, status_id, assigned_to, serial_number, barcode_value, location_id, location_name, purchase_date, purchase_price, image_url, notes, last_service_date } = req.body;
 
     if (!name || !category_id || !status_id || !serial_number || !purchase_date || purchase_price == null) {
       return res.status(400).json({ message: 'Missing required fields: name, category_id, status_id, serial_number, purchase_date, purchase_price' });
@@ -91,9 +125,9 @@ exports.create = async (req, res) => {
 
     const id = uuidv4();
     await pool.query(
-      `INSERT INTO assets (id, name, category_id, status_id, assigned_to, serial_number, location_id, location_name, purchase_date, purchase_price, image_url, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, name, category_id, status_id, assigned_to || null, serial_number, location_id || null, location_name || '', purchase_date, purchase_price, image_url || null, notes || null]
+      `INSERT INTO assets (id, name, category_id, status_id, assigned_to, serial_number, barcode_value, location_id, location_name, purchase_date, purchase_price, image_url, notes, last_service_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, name, category_id, status_id, assigned_to || null, serial_number, barcode_value || null, location_id || null, location_name || '', purchase_date, purchase_price, image_url || null, notes || null, last_service_date || null]
     );
 
     const [rows] = await pool.query(
@@ -107,6 +141,7 @@ exports.create = async (req, res) => {
     );
     res.status(201).json({ asset: rows[0] });
   } catch (err) {
+    console.error('create Error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
@@ -119,7 +154,7 @@ exports.update = async (req, res) => {
       return res.status(404).json({ message: 'Asset not found' });
     }
 
-    const fields = ['name', 'category_id', 'status_id', 'assigned_to', 'serial_number', 'location_id', 'location_name', 'purchase_date', 'purchase_price', 'image_url', 'notes'];
+    const fields = ['name', 'category_id', 'status_id', 'assigned_to', 'serial_number', 'barcode_value', 'location_id', 'location_name', 'purchase_date', 'purchase_price', 'image_url', 'notes', 'last_service_date'];
     const updates = [];
     const params = [];
 
@@ -155,6 +190,7 @@ exports.update = async (req, res) => {
     );
     res.json({ asset: rows[0] });
   } catch (err) {
+    console.error('update Error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
@@ -169,6 +205,7 @@ exports.delete = async (req, res) => {
     await pool.query('DELETE FROM assets WHERE id = ?', [req.params.id]);
     res.json({ message: 'Asset deleted' });
   } catch (err) {
+    console.error('delete Error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
@@ -191,15 +228,16 @@ exports.getStats = async (req, res) => {
 
     const statusMap = {};
     for (const row of statusCounts) {
-      // we still provide keys matching lowercase for legacy compat in dashboard
-      // Or we can just pass the real names
-      statusMap[row.status.toLowerCase()] = row.count; 
+      if (row.status) {
+        statusMap[row.status.toLowerCase()] = row.count; 
+      }
     }
 
     const categoryBreakdown = {};
     for (const row of categoryCounts) {
-      // lowercase for safety if old UI relies on it
-      categoryBreakdown[row.category.toLowerCase()] = row.count;
+      if (row.category) {
+        categoryBreakdown[row.category.toLowerCase()] = row.count;
+      }
     }
 
     res.json({
@@ -211,6 +249,7 @@ exports.getStats = async (req, res) => {
       categoryBreakdown,
     });
   } catch (err) {
+    console.error('getStats Error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };

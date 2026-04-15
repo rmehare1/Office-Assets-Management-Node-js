@@ -10,6 +10,9 @@ const statRoutes = require('./routes/statuses');
 const locationRoutes = require('./routes/locations');
 const departmentRoutes = require('./routes/departments');
 const ticketRoutes = require('./routes/tickets');
+const alertRoutes = require('./routes/alerts');
+
+const { startMaintenanceJob } = require('./jobs/maintenanceJob');
 
 const app = express();
 
@@ -24,6 +27,10 @@ app.use('/api/statuses', statRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/alerts', alertRoutes);
+
+// Start scheduled jobs
+startMaintenanceJob();
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

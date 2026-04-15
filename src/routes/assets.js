@@ -6,6 +6,7 @@ const { verifyToken } = require('../middleware/auth');
 router.use(verifyToken);
 
 router.get('/stats/summary', assetController.getStats);
+router.get('/lookup', assetController.lookupByCode);
 router.get('/', assetController.getAll);
 router.get('/:id', assetController.getById);
 router.post('/', assetController.create);
